@@ -1,0 +1,9 @@
+@use './helpers/resit';
+
+.btn-content {
+  @apply flex gap-2 items-center capitalize;
+}
+
+.close-btn {
+  @apply w-8 rounded h-8 bg-red grid place-items-center cursor-pointer stroke-white fill-none;
+}

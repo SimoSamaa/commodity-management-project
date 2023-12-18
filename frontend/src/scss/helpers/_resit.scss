@@ -1,0 +1,49 @@
+@use './mixins' as *;
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  @include appColorMode(dark)
+}
+
+:root {
+  @include appColorMode(light)
+}
+
+@layer base {
+  body {
+    @apply bg-bg text-text p-6;
+    min-block-size: 100svh;
+  }
+
+  :is(h1, h2, h3) {
+    @apply text-heading font-semibold;
+  }
+
+  h1 {
+    @apply text-3xl;
+  }
+
+  h2 {
+    @apply text-2xl;
+  }
+
+  h3 {
+    @apply text-xl;
+  }
+
+  :is(button, input, select) {
+    @apply rounded outline-none select-none border border-border bg-seconder;
+    transition: box-shadow 300ms ease-out, background 300ms ease-out;
+
+    &:focus-visible {
+      box-shadow: 0 0 0 3px var(--clr-bg), 0 0 0 4.5px var(--clr-border);
+    }
+  }
+
+  svg {
+    @apply w-6 h-6
+  }
+}

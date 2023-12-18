@@ -1,0 +1,73 @@
+@use './colors' as *;
+
+@mixin ligthMode() {
+  @each $color, $value in $colorsLight {
+    --clr-#{$color}: #{$value};
+  }
+}
+
+@mixin darkMode() {
+  @each $color, $value in $colorsDark {
+    --clr-#{$color}: #{$value};
+  }
+}
+
+@mixin appColorMode($mode) {
+  @if($mode =="dark") {
+    @media (prefers-color-scheme:dark) {
+      @include darkMode();
+    }
+  }
+
+  @else if($mode =="light") {
+    @media (prefers-color-scheme:light) {
+      @include ligthMode();
+    }
+  }
+}
+
+@mixin animation($name, $add, $filter) {
+  .#{$name}-enter-active {
+    animation: #{$name} 300ms ease-in;
+  }
+
+  .#{$name}-leave-active {
+    animation: #{$name} 300ms ease-out reverse;
+  }
+
+  @keyframes #{$name} {
+    @if ($add =='add') {
+      from {
+        transform: translate(-50%, -300px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translate(-50%, 0);
+        opacity: 1;
+      }
+    }
+
+    @else if $filter =='filter' {
+      from {
+        transform: translate(-50%, 100px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translate(-50%, -100px);
+        opacity: 1;
+      }
+    }
+
+    @else {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+  }
+}
