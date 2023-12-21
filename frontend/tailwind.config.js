@@ -17,7 +17,8 @@ module.exports = {
         border: 'var(--clr-border)',
         alert: 'var(--clr-alert)',
         error: 'var(--clr-error)',
-        lime: 'var(--clr-lime)'
+        lime: 'var(--clr-lime)',
+        sky: 'var(--clr-sky)'
       },
     },
   },

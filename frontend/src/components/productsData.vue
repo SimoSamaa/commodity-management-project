@@ -48,11 +48,11 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed } from "vue";
+import { defineComponent, computed, ref } from "vue";
 import { useStore } from "vuex";
 
 export default defineComponent({
-  emits: ["update-btn", "alert-delete"],
+  emits: ["update-btn", "alert-delete", "alert-delete-err"],
   props: [
     "id",
     "title",
@@ -67,6 +67,7 @@ export default defineComponent({
 
   setup(props, { emit }) {
     const store = useStore();
+    const error = ref<string>("");
 
     const checkDiscount = computed<string>(() =>
       props.discount === "" ? "no discount" : props.discount
@@ -78,7 +79,17 @@ export default defineComponent({
 
     const handledDelete = async (id: string) => {
       emit("alert-delete", "Product Removed!!");
-      await store.dispatch("deleteProducts", id);
+      try {
+        await store.dispatch("deleteProducts", id);
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          error.value = "failed ro remove product" || err.message;
+        } else {
+          error.value = "An unknown error occurred";
+        }
+
+        emit("alert-delete-err", error.value);
+      }
     };
 
     const productDate = computed<string>(() => {

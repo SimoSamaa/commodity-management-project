@@ -1,6 +1,7 @@
 <template>
   <section>
     <BaseAlert :message="alertMessage" />
+    <BaseAlert :message="error" />
     <Teleport to="body">
       <transition name="backdrop">
         <div class="fixed inset-0 bg-[#000000b3]" v-if="openAdd" @click="openAddProduct"></div>
@@ -138,6 +139,7 @@ export default defineComponent({
     const products = computed(() => store.getters.products);
     const categorys = ref<string[]>(["phone", "tv", "laptop", "watch"]);
     const formValidation = ref<boolean>(true);
+    const error = ref<string | undefined>();
     const selectedProd = ref<ProductsObj | null>(null);
     const alertMessage = ref<string>("");
 
@@ -255,22 +257,41 @@ export default defineComponent({
       }
 
       if (props.updateMode) {
-        await store.dispatch("updateProduct", prodData());
-
-        alertMessage.value = "Product Updated";
-      } else {
-        await store.dispatch("addProducts", prodData());
-
-        for (let i = 1; i < parseInt(inputsProduct.count.value); i++) {
-          await store.dispatch("addProducts", prodData());
+        try {
+          await store.dispatch("updateProduct", prodData());
+        } catch (err: unknown) {
+          if (err instanceof Error) {
+            error.value = "Fail to UPDATE Product" || err.message;
+          } else {
+            error.value = "An unknown error occurred";
+          }
+        } finally {
+          alertMessage.value = "Product Updated";
         }
+      } else {
+        try {
+          await store.dispatch("addProducts", prodData());
 
-        alertMessage.value = "Product Adedd";
+          for (let i = 1; i < parseInt(inputsProduct.count.value); i++) {
+            await store.dispatch("addProducts", prodData());
+          }
+        } catch (err: unknown) {
+          if (err instanceof Error) {
+            error.value = "Fail to POST Products" || err.message;
+          } else {
+            error.value = "An unknown error occurred";
+          }
+        } finally {
+          alertMessage.value = "Product Adedd";
+        }
       }
 
       openAddProduct();
       resetAllInput();
-      setTimeout(() => (alertMessage.value = ""), 3000);
+      setTimeout(() => {
+        alertMessage.value = "";
+        error.value = "";
+      }, 3000);
     };
 
     watch(
@@ -304,6 +325,7 @@ export default defineComponent({
       formValidation,
       formErrMess,
       alertMessage,
+      error,
       // METHODS
       openAddProduct,
       submitProductForm,

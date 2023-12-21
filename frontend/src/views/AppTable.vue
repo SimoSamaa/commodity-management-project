@@ -1,6 +1,7 @@
 <template>
   <section>
     <BaseAlert :message="alertMessage" />
+    <BaseAlert :message="error" />
     <base-model title="Filter" :showModle="zaba" @close-modle="closeModle">
       <ProductsFilter @change-filter="setFilters" />
     </base-model>
@@ -138,6 +139,7 @@
             :date="prod.date"
             @update-btn="handledUpdate"
             @alert-delete="handledAlertDeleted"
+            @alert-delete-err="handledAlertDeletedErr"
           />
         </tbody>
       </table>
@@ -149,8 +151,8 @@
         <h1>Opps no product found</h1>
       </div>
     </div>
-    <div ref="placeholderTable" class="bg-yellow-500"></div>
-    <div ref="placeholderTable2" class="bg-black"></div>
+    <div ref="placeholderTable"></div>
+    <div ref="placeholderTable2"></div>
     <div class="flex justify-between items-center mt-9">
       <div class="flex gap-1 items-center">
         showing
@@ -238,6 +240,7 @@ export default defineComponent({
     const updateProd = ref<string>("");
     const searchInput = ref<string>("");
     const alertMessage = ref<string>("");
+    const error = ref<string>("");
     const filters = ref<CategorysBoo>({
       phone: true,
       tv: true,
@@ -404,14 +407,24 @@ export default defineComponent({
 
       return searchProducts.value.slice(startIndex, endIndex);
     });
-    const alertDeleteMess = ref<string>("");
 
     // DELETE ALL PRODUCTS
     const handledDeleteAll = async () => {
       if (checkePproducts.value) return;
-      await store.dispatch("delteAll");
+      try {
+        await store.dispatch("delteAll");
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          error.value = "Failed to Remove All Products" || err.message;
+        } else {
+          error.value = "An unknown error occurred";
+        }
+      }
       alertMessage.value = "All Products Removed";
-      setTimeout(() => (alertMessage.value = ""), 3000);
+      setTimeout(() => {
+        alertMessage.value = "";
+        error.value = "";
+      }, 3000);
     };
 
     const handledAlertDeleted = (alert: string) => {
@@ -419,9 +432,22 @@ export default defineComponent({
       setTimeout(() => (alertMessage.value = ""), 3000);
     };
 
+    const handledAlertDeletedErr = (str: string) => {
+      error.value = str;
+      setTimeout(() => (error.value = ""), 3000);
+    };
+
     // LOAD PRODUCTS FROM DATABASE
     const loadProductsData = async () => {
-      await store.dispatch("fetchProducts");
+      try {
+        await store.dispatch("fetchProducts");
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          error.value = "Failed to Fetch Products" || err.message;
+        } else {
+          error.value = "An unknown error occurred";
+        }
+      }
     };
 
     loadProductsData();
@@ -441,7 +467,7 @@ export default defineComponent({
       currentPage,
       productsPage,
       alertMessage,
-      alertDeleteMess,
+      error,
       // COMPUTED
       filterProducts,
       searchProducts,
@@ -460,6 +486,7 @@ export default defineComponent({
       handledDeleteAll,
       handledUpdate,
       handledAlertDeleted,
+      handledAlertDeletedErr,
     };
   },
 });
