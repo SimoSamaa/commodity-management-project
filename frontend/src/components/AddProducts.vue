@@ -27,6 +27,8 @@
                 type="text"
                 placeholder=" Title"
                 v-model.trim="inputsProduct.title.value"
+                @input="clearValidity('title')"
+                :disabled="isLoding"
               />
               <input
                 class="inputs"
@@ -34,6 +36,8 @@
                 type="number"
                 placeholder="Price"
                 v-model.number="inputsProduct.price.value"
+                @input="clearValidity('price')"
+                :disabled="isLoding"
               />
               <input
                 class="inputs"
@@ -41,6 +45,8 @@
                 type="number"
                 placeholder="taxes"
                 v-model.number="inputsProduct.taxes.value"
+                @input="clearValidity('taxes')"
+                :disabled="isLoding"
               />
               <input
                 class="inputs"
@@ -48,23 +54,32 @@
                 type="number"
                 placeholder="Ads"
                 v-model.number="inputsProduct.ads.value"
+                @input="clearValidity('ads')"
+                :disabled="isLoding"
               />
               <input
                 class="inputs"
                 type="number"
                 placeholder="Discount"
                 v-model.number="inputsProduct.discount.value"
+                :disabled="isLoding"
               />
               <input
                 class="inputs"
                 type="number"
                 placeholder="Count"
                 v-model.number="inputsProduct.count.value"
+                :disabled="isLoding || updateMode"
               />
             </div>
             <div class="grid my-4">
               <label for="category" class="mb-2">Category</label>
-              <select v-model="inputsProduct.category.value" class="h-10 pl-3">
+
+              <select
+                v-model="inputsProduct.category.value"
+                :disabled="isLoding || updateMode"
+                class="h-10 pl-3"
+              >
                 <option
                   v-for="category in categorys"
                   :key="category"
@@ -72,16 +87,28 @@
                 >{{ category }}</option>
               </select>
             </div>
-            <p
-              v-if="!formValidation"
-              class="text-red mb-4 font-semibold transition-all"
-            >{{ formErrMess }}</p>
+            <transition name="backdrop">
+              <p
+                v-if="!formValidation"
+                class="text-error mb-4 font-semibold transition-all"
+              >{{ formErrMess }}</p>
+            </transition>
             <div class="flex justify-between items-center">
               <div class="flex gap-4">
-                <base-button type="submit" hover="green" @click="clearTimeOutBtn">
+                <base-button
+                  type="submit"
+                  hover="green"
+                  :disabled="isLoding"
+                  @click="clearTimeOutBtn"
+                >
                   <div class="btn-content">
                     {{ updateMode ? 'update' : 'save' }}
+                    <div
+                      v-if="isLoding"
+                      class="animate-spin w-5 h-5 border-[3px] rounded-full border-l-transparent"
+                    ></div>
                     <svg
+                      v-else
                       xmlns="http://www.w3.org/2000/svg"
                       fill="none"
                       viewBox="0 0 24 24"
@@ -139,6 +166,7 @@ export default defineComponent({
     const products = computed(() => store.getters.products);
     const categorys = ref<string[]>(["phone", "tv", "laptop", "watch"]);
     const formValidation = ref<boolean>(true);
+    const isLoding = ref<boolean>(false);
     const error = ref<string | undefined>();
     const selectedProd = ref<ProductsObj | null>(null);
     const alertMessage = ref<string>("");
@@ -171,6 +199,10 @@ export default defineComponent({
         isValid: true,
       },
     });
+
+    const clearValidity = (input: keyof ProductInput) => {
+      (inputsProduct as Record<keyof ProductInput, any>)[input].isValid = true;
+    };
 
     const openAddProduct = () => emit("openAddProduct");
 
@@ -258,6 +290,8 @@ export default defineComponent({
 
       if (props.updateMode) {
         try {
+          isLoding.value = true;
+
           await store.dispatch("updateProduct", prodData());
         } catch (err: unknown) {
           if (err instanceof Error) {
@@ -267,9 +301,12 @@ export default defineComponent({
           }
         } finally {
           alertMessage.value = "Product Updated";
+          isLoding.value = false;
         }
       } else {
         try {
+          isLoding.value = true;
+
           await store.dispatch("addProducts", prodData());
 
           for (let i = 1; i < parseInt(inputsProduct.count.value); i++) {
@@ -283,6 +320,7 @@ export default defineComponent({
           }
         } finally {
           alertMessage.value = "Product Adedd";
+          isLoding.value = false;
         }
       }
 
@@ -317,6 +355,18 @@ export default defineComponent({
       }
     );
 
+    watch(
+      () => props.openAdd,
+      () => {
+        if (!props.openAdd) {
+          Object.values(inputsProduct).forEach((input) => {
+            if ("isValid" in input) input.isValid = true;
+          });
+          formErrMess.value = "";
+        }
+      }
+    );
+
     return {
       // VARS
       inputsProduct,
@@ -326,10 +376,12 @@ export default defineComponent({
       formErrMess,
       alertMessage,
       error,
+      isLoding,
       // METHODS
       openAddProduct,
       submitProductForm,
       clearTimeOutBtn,
+      clearValidity,
     };
   },
 });
@@ -343,13 +395,18 @@ export default defineComponent({
   -moz-appearance: textfield;
 
   &.input-error {
-    @apply bg-red;
+    @apply bg-error;
   }
 
   &::-webkit-outer-spin-button,
   &::-webkit-inner-spin-button {
     -webkit-appearance: none;
   }
+}
+
+:is(input, select):disabled {
+  cursor: no-drop;
+  filter: brightness(0.7);
 }
 
 @include animation("backdrop", null, null);
