@@ -6,7 +6,7 @@
       <ProductsFilter @change-filter="setFilters" />
     </base-model>
     <!-- Filter and Search Actions-->
-    <div class="flex justify-between items-center pb-4 border-b border-border">
+    <div class="flex gap-4 justify-between items-center pb-4 border-b border-border">
       <base-button @click="zaba = true" :disabled="checkePproducts">
         <div class="btn-content">
           filters
@@ -15,6 +15,7 @@
             viewBox="0 0 24 24"
             stroke-width="1.5"
             stroke="currentColor"
+            fill="none"
           >
             <path
               stroke-linecap="round"
@@ -145,7 +146,11 @@
       </table>
       <!-- alert => no data in database -->
       <div v-if="checkePproducts" class="alert-product-mess">
-        <h1>No products in database</h1>
+        <div
+          v-if="isLoading"
+          class="animate-spin w-20 h-20 border-4 rounded-full border-l-transparent"
+        ></div>
+        <h1 v-else>No products in database</h1>
       </div>
       <div v-if="productsPage.length === 0 && products.length > 0" class="alert-product-mess">
         <h1>Opps no product found</h1>
@@ -438,8 +443,10 @@ export default defineComponent({
     };
 
     // LOAD PRODUCTS FROM DATABASE
+    const isLoading = ref<boolean>(false);
     const loadProductsData = async () => {
       try {
+        isLoading.value = true;
         await store.dispatch("fetchProducts");
       } catch (err: unknown) {
         if (err instanceof Error) {
@@ -447,6 +454,8 @@ export default defineComponent({
         } else {
           error.value = "An unknown error occurred";
         }
+      } finally {
+        isLoading.value = false;
       }
     };
 
@@ -468,6 +477,7 @@ export default defineComponent({
       productsPage,
       alertMessage,
       error,
+      isLoading,
       // COMPUTED
       filterProducts,
       searchProducts,

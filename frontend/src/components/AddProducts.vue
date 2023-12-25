@@ -87,12 +87,7 @@
                 >{{ category }}</option>
               </select>
             </div>
-            <transition name="backdrop">
-              <p
-                v-if="!formValidation"
-                class="text-error mb-4 font-semibold transition-all"
-              >{{ formErrMess }}</p>
-            </transition>
+            <p v-if="!formValidation" class="text-error mb-4 font-semibold">{{ formErrMess }}</p>
             <div class="flex justify-between items-center">
               <div class="flex gap-4">
                 <base-button
