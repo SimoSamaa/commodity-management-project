@@ -14,7 +14,7 @@
 
 @layer base {
   body {
-    @apply bg-bg text-text p-6;
+    @apply bg-bg text-text p-[1rem];
     min-block-size: 100svh;
   }
 
